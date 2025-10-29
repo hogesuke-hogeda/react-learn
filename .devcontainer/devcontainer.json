@@ -1,29 +1,88 @@
-
+/**
+ * devcontainerプロパティ一覧: https://containers.dev/implementors/json_reference/
+ *   - devcontainer.jsonで利用できる変数: https://containers.dev/implementors/json_reference/#variables-in-devcontainerjson
+ */
 {
+  /**
+   * プロパティ: https://containers.dev/implementors/json_reference/#general-properties
+   */
+  // UIに表示するdevcontainerの名前
   "name": "react-learn",
+
+   // コンテナの環境変数設定
   "containerEnv": {
-    "CONTAINER_PROJECT_ROOT": "${containerWorkspaceFolder}"
+      // ホスト側のプロジェクトディレクトリ
+      "HOST_DIR": "${localWorkspaceFolder}",
+      // コンテナ側のプロジェクトディレクトリ
+      "PROJECT_DIR": "${containerWorkspaceFolder}",
+      // ホスト側のユーザー名
+      "HOST_USER": "${localEnv:USER}",
+      // devcontainerが所属するネットワーク名
+      "DOCKER_NETWORK": "br-react-learn-${localEnv:USER}"
   },
+
+  "mounts": [
+      "source=${localEnv:HOME}/.ssh/,target=/home/vscode/.ssh/,type=bind,consistency=cached",
+      "source=${localEnv:HOME}/.aws/,target=/home/vscode/.aws/,type=bind,consistency=cached"
+  ],
+
+  // devcontainerに追加する機能の定義
+  // features一覧: https://containers.dev/features
+  "features": {
+    // docker outside of dockerを利用するための設定: https://github.com/devcontainers/features/tree/main/src/docker-outside-of-docker
+    "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {}
+  },
+
+
+  /**
+   * Docierfile関連のプロパティ: https://containers.dev/implementors/json_reference/#image-specific
+   */
   "build": {
-    "dockerfile": "Dockerfile"
+    "dockerfile": "Dockerfile",
+    "context": ".."  // プロジェクトルートをdocker buildのコンテキストに指定
   },
+
+  // devcontainer 起動時の docker run のオプション
+  "runArgs": [
+    "--network=br-react-learn-${localEnv:USER}"
+  ],
+
+
+  /**
+   * ライフサイクル関連のプロパティ: https://containers.dev/implementors/json_reference/#lifecycle-scripts
+   */
+  // コンテナ初期化時にホスト側で実行されるコマンド
+  "initializeCommand": "/bin/bash .devcontainer/init.sh",
+
+  // コンテナが初めて起動した直後にコンテナ内で実行されるコマンド
+  "onCreateCommand": "/bin/bash .devcontainer/on-create.sh",
+
+  // devcontainerにアタッチするたびにコンテナ内で毎回実行されるコマンド
+  "postAttachCommand": "/bin/bash .devcontainer/post-attach.sh",
+
+
+
+  /**
+   * VSCodeのプラグイン
+   */
   "customizations": {
     "vscode": {
       "extensions": [
-        "ms-vscode.vscode-typescript-next",
-        "ms-azuretools.vscode-docker",
-        "github.copilot",
-        "github.copilot-chat",
-        "oderwat.indent-rainbow",
-        "ms-ceintl.vscode-language-pack-ja",
+        // Docs
+        "hediet.vscode-drawio",
+        "yzhang.markdown-all-in-one",
+        "bierner.github-markdown-preview",
+        "bierner.markdown-mermaid",
         "jebbs.plantuml",
-        "shardulm94.trailing-spaces",
-        "mhutchie.git-graph",
-        "ritwickdey.liveserver"
+
+        // Copilot
+        "GitHub.copilot",
+        "GitHub.copilot-chat",
+
+        // Others
+        "ms-vscode.makefile-tools",
+        "ms-azuretools.vscode-docker"
       ]
     }
-  },
-  "workspaceMount": "source=${localWorkspaceFolder},target=/react-learn,type=bind,consistency=cached",
-  "workspaceFolder": "/react-learn",
-  "onCreateCommand": "/bin/bash ${containerWorkspaceFolder}/.devcontainer/on-create.sh"
+  }
 }
